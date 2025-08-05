@@ -1,0 +1,89 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Model files
+*.joblib
+*.keras
+*.pkl
+*.h5
+model.pkl
+
+# Data tracked by DVC
+data/iris.csv
+
+# DVC files and cache
+dvc.lock
+.dvc/tmp/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Test output
+result.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Linting and type checking cache
+.mypy_cache/
+.pylint.d/
+
+# Training artifacts and checkpoints
+checkpoints/
+runs/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# MLflow artifacts (if using MLflow)
+mlruns/
+artifacts/
+
+# Reports and metrics (from your workflow)
+report.md
+metrics.png
+*.json
+*.csv
+
+
+
+
+
+
+
+
+
+
+# GCP credentials and service account keys
+gcp-key.json
+*.json
+service-account-*.json
+*credentials*.json
+mlopsweek1-*.json
+data/iris.csv
+data/iris.csv
+gcp-key.b64.txt

@@ -1,0 +1,67 @@
+# Parameters for IRIS Data Poisoning Experiment
+# This file contains all configurable parameters for the DVC pipeline
+
+# Data poisoning configuration
+poisoning:
+  levels: [0.05, 0.10, 0.50]  # 5%, 10%, 50% poison levels
+  random_seed: 42
+  output_dir: "data/poisoned"
+
+# Model training parameters
+training:
+  test_size: 0.2
+  random_state: 42
+  models:
+    random_forest:
+      n_estimators: 100
+      max_depth: null
+      random_state: 42
+    svm:
+      C: 1.0
+      kernel: "rbf"
+      random_state: 42
+      probability: true
+    logistic_regression:
+      max_iter: 1000
+      random_state: 42
+
+# Label validation parameters
+validation:
+  knn:
+    k: 5
+    threshold: 0.5
+    normalize_features: true
+  confidence:
+    threshold: 0.8
+    model_type: "random_forest"
+
+# Visualization parameters
+visualization:
+  figsize: [12, 8]
+  dpi: 300
+  style: "seaborn-v0_8"
+  color_palette: "husl"
+
+# Evaluation parameters
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision_macro"
+    - "recall_macro"
+    - "f1_macro"
+  cross_validation:
+    cv_folds: 5
+    scoring: "accuracy"
+
+# MLflow configuration
+mlflow:
+  experiment_name: "iris_poisoning_experiment"
+  tracking_uri: "file:./mlruns"
+  artifact_location: "file:./mlartifacts"
+
+# Reporting configuration
+reporting:
+  output_dir: "reports"
+  include_plots: true
+  include_metrics: true
+  include_confusion_matrices: true

@@ -1,0 +1,5 @@
+[core]
+    remote = gcsremote
+['remote "gcsremote"']
+    url = gs://week4_mlops_bucket
+    credentialpath = /home/lalitmach22/iris_pipeline/gcp-key.json

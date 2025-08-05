@@ -1,0 +1,227 @@
+# DVC Pipeline for IRIS Data Poisoning Experiment
+# This file defines the complete ML pipeline with dependencies and outputs
+
+stages:
+  # Stage 1: Data Preparation and Poisoning
+  prepare_data:
+    cmd: >-
+      python -c "
+      import pandas as pd;
+      from sklearn.datasets import load_iris;
+      import os;
+      os.makedirs('data', exist_ok=True);
+      iris = load_iris();
+      df = pd.DataFrame(iris.data, columns=iris.feature_names);
+      df['species'] = [iris.target_names[i] for i in iris.target];
+      df.to_csv('data/iris.csv', index=False);
+      print('IRIS dataset prepared')
+      "
+    outs:
+      - data/iris.csv
+
+  poison_data:
+    cmd: python src/poison_data.py --multiple-levels
+    deps:
+      - src/poison_data.py
+      - data/iris.csv
+    params:
+      - poisoning.levels
+      - poisoning.random_seed
+    outs:
+      - data/poisoned/
+
+  # Stage 2: Model Training
+  train_clean_model:
+    cmd: python src/train_model.py --data-path data/iris.csv --experiment-name clean_baseline
+    deps:
+      - src/train_model.py
+      - data/iris.csv
+    params:
+      - training.test_size
+      - training.random_state
+      - training.models
+    outs:
+      - artifacts/random_forest_iris/
+    metrics:
+      - artifacts/random_forest_iris/metrics.json
+
+  train_poisoned_5pct:
+    cmd: python src/train_model.py --data-path data/poisoned/iris_poisoned_5pct.csv --experiment-name poisoned_5pct
+    deps:
+      - src/train_model.py
+      - data/poisoned/iris_poisoned_5pct.csv
+    params:
+      - training.test_size
+      - training.random_state
+      - training.models.random_forest
+    outs:
+      - artifacts/random_forest_iris_poisoned_5pct/
+    metrics:
+      - artifacts/random_forest_iris_poisoned_5pct/metrics.json
+
+  train_poisoned_10pct:
+    cmd: python src/train_model.py --data-path data/poisoned/iris_poisoned_10pct.csv --experiment-name poisoned_10pct
+    deps:
+      - src/train_model.py
+      - data/poisoned/iris_poisoned_10pct.csv
+    params:
+      - training.test_size
+      - training.random_state
+      - training.models.random_forest
+    outs:
+      - artifacts/random_forest_iris_poisoned_10pct/
+    metrics:
+      - artifacts/random_forest_iris_poisoned_10pct/metrics.json
+
+  train_poisoned_50pct:
+    cmd: python src/train_model.py --data-path data/poisoned/iris_poisoned_50pct.csv --experiment-name poisoned_50pct
+    deps:
+      - src/train_model.py
+      - data/poisoned/iris_poisoned_50pct.csv
+    params:
+      - training.test_size
+      - training.random_state
+      - training.models.random_forest
+    outs:
+      - artifacts/random_forest_iris_poisoned_50pct/
+    metrics:
+      - artifacts/random_forest_iris_poisoned_50pct/metrics.json
+
+  # Stage 3: Label Validation
+  validate_clean_labels:
+    cmd: python src/validate_labels.py --data-path data/iris.csv --output-report reports/validation_clean.json
+    deps:
+      - src/validate_labels.py
+      - data/iris.csv
+    params:
+      - validation.knn.k
+      - validation.knn.threshold
+    outs:
+      - reports/validation_clean.json
+
+  validate_poisoned_5pct:
+    cmd: python src/validate_labels.py --data-path data/poisoned/iris_poisoned_5pct.csv --output-report reports/validation_5pct.json
+    deps:
+      - src/validate_labels.py
+      - data/poisoned/iris_poisoned_5pct.csv
+    params:
+      - validation.knn.k
+      - validation.knn.threshold
+    outs:
+      - reports/validation_5pct.json
+
+  validate_poisoned_10pct:
+    cmd: python src/validate_labels.py --data-path data/poisoned/iris_poisoned_10pct.csv --output-report reports/validation_10pct.json
+    deps:
+      - src/validate_labels.py
+      - data/poisoned/iris_poisoned_10pct.csv
+    params:
+      - validation.knn.k
+      - validation.knn.threshold
+    outs:
+      - reports/validation_10pct.json
+
+  validate_poisoned_50pct:
+    cmd: python src/validate_labels.py --data-path data/poisoned/iris_poisoned_50pct.csv --output-report reports/validation_50pct.json
+    deps:
+      - src/validate_labels.py
+      - data/poisoned/iris_poisoned_50pct.csv
+    params:
+      - validation.knn.k
+      - validation.knn.threshold
+    outs:
+      - reports/validation_50pct.json
+
+  # Stage 4: Model Evaluation and Comparison
+  evaluate_clean_vs_5pct:
+    cmd: python src/evaluate_model.py --compare-models 
+      --clean-artifacts artifacts/random_forest_iris 
+      --poisoned-artifacts artifacts/random_forest_iris_poisoned_5pct 
+      --test-data data/iris.csv 
+      --output-report reports/comparison_5pct.json
+    deps:
+      - src/evaluate_model.py
+      - artifacts/random_forest_iris/
+      - artifacts/random_forest_iris_poisoned_5pct/
+      - data/iris.csv
+    outs:
+      - reports/comparison_5pct.json
+
+  evaluate_clean_vs_10pct:
+    cmd: python src/evaluate_model.py --compare-models 
+      --clean-artifacts artifacts/random_forest_iris 
+      --poisoned-artifacts artifacts/random_forest_iris_poisoned_10pct 
+      --test-data data/iris.csv 
+      --output-report reports/comparison_10pct.json
+    deps:
+      - src/evaluate_model.py
+      - artifacts/random_forest_iris/
+      - artifacts/random_forest_iris_poisoned_10pct/
+      - data/iris.csv
+    outs:
+      - reports/comparison_10pct.json
+
+  evaluate_clean_vs_50pct:
+    cmd: python src/evaluate_model.py --compare-models 
+      --clean-artifacts artifacts/random_forest_iris 
+      --poisoned-artifacts artifacts/random_forest_iris_poisoned_50pct 
+      --test-data data/iris.csv 
+      --output-report reports/comparison_50pct.json
+    deps:
+      - src/evaluate_model.py
+      - artifacts/random_forest_iris/
+      - artifacts/random_forest_iris_poisoned_50pct/
+      - data/iris.csv
+    outs:
+      - reports/comparison_50pct.json
+
+  # Stage 5: Visualization and Reporting
+  create_visualizations:
+    cmd: >-
+      python src/visualize_results.py 
+      --data-distribution 
+      --datasets data/iris.csv data/poisoned/iris_poisoned_5pct.csv data/poisoned/iris_poisoned_10pct.csv data/poisoned/iris_poisoned_50pct.csv
+      --output-dir visualizations
+    deps:
+      - src/visualize_results.py
+      - data/iris.csv
+      - data/poisoned/
+      - reports/comparison_5pct.json
+      - reports/comparison_10pct.json
+      - reports/comparison_50pct.json
+    params:
+      - visualization.figsize
+      - visualization.dpi
+    outs:
+      - visualizations/
+
+  generate_final_report:
+    cmd: >-
+      python -c "
+      import json;
+      import pandas as pd;
+      from pathlib import Path;
+      import os;
+      os.makedirs('reports', exist_ok=True);
+      results = {};
+      reports_dir = Path('reports');
+      summary = {'experiment_summary': {'note': 'Final report generated'}, 'generated_at': pd.Timestamp.now().isoformat()};
+      with open('reports/final_summary.json', 'w') as f: json.dump(summary, f, indent=2);
+      print('Final summary report generated')
+      "
+    deps:
+      - reports/comparison_5pct.json
+      - reports/comparison_10pct.json
+      - reports/comparison_50pct.json
+      - reports/validation_clean.json
+      - reports/validation_5pct.json
+      - reports/validation_10pct.json
+      - reports/validation_50pct.json
+    outs:
+      - reports/final_summary.json
+
+# Define plots for DVC to track
+plots:
+  - visualizations/performance_comparison.png
+  - visualizations/data_distribution.png
+  - visualizations/feature_space_analysis.png
