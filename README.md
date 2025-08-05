@@ -137,18 +137,26 @@ graph TD
 
 ### Cloud Setup (Google Cloud Shell)
 
-The pipeline is designed to work seamlessly in cloud environments:
+The pipeline is designed to work seamlessly in cloud environments. **If you encounter storage space issues**, use the optimized setup:
 
 ```bash
-# In Google Cloud Shell
+# In Google Cloud Shell (Optimized for space constraints)
 mkdir week8 && cd week8
 git clone <repository-url>
 cd iris_pipeline
-python3 -m venv .venv
+
+# Use space-efficient setup script
+bash scripts/cloudshell_setup.sh
 source .venv/bin/activate
-pip install -r requirements.txt
-dvc pull data/iris.csv.dvc
+
+# For minimal installation (if space is very limited)
+pip install --no-cache-dir -r requirements-minimal.txt
+
+# Quick demo without heavy dependencies
+python cloudshell_demo.py
 ```
+
+**Storage Troubleshooting**: If you get "No space left on device" errors, see `CLOUDSHELL_GUIDE.md` for detailed solutions.
 
 ## 📖 Usage Guide
 
